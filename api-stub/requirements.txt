@@ -1,0 +1,4 @@
+fastapi
+uvicorn[standard]
+pyyaml
+jsonschema>=4.18.0

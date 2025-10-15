@@ -1,0 +1,71 @@
+# --- Virtual environments (top-level or nested)
+.venv/
+venv/
+env/
+**/.venv/
+**/venv/
+**/env/
+
+# --- Python cache / bytecode
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Packaging / build artifacts
+build/
+dist/
+.eggs/
+*.egg-info/
+*.egg
+pip-wheel-metadata/
+
+# --- Test / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# --- Type checkers / linters
+.mypy_cache/
+.pyre/
+.pytype/
+.ruff_cache/
+
+# --- IDE / editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- OS junk
+.DS_Store
+Thumbs.db
+
+# --- Notebooks
+.ipynb_checkpoints/
+
+# --- Logs & local dbs
+*.log
+*.sqlite3
+*.db
+
+# --- Environment files (keep example)
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# --- Tooling / version pins (optional)
+.python-version  # pyenv
+
+api-stub/logs
+api-stub/spec
+
+audit/
+data/
+error/
+processed/
+sample/

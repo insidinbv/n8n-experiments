@@ -1,0 +1,325 @@
+{
+  "name": "Push to API",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "90923861-d6f3-42c1-8c2f-1732182b46e4",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        128
+      ],
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "fileSelector": "/data/*.json",
+        "options": {
+          "fileExtension": "json",
+          "dataPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        208,
+        240
+      ],
+      "id": "4b1863fb-6941-4278-8a39-721a5f5f6b1f",
+      "name": "Read json files"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "http://host.docker.internal:8888/api/v1/Commodities",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "2e07ee02-49cb-40ee-8ef3-6975f0c90f99",
+      "name": "PUT to API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        576,
+        240
+      ],
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {
+          "keepSource": "json"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        384,
+        240
+      ],
+      "id": "94136d6d-3488-4387-bc2e-488135a9773c",
+      "name": "Extract JSON"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "74587900-90bd-4bb9-b326-101a540e8044",
+              "leftValue": "={{ $('PUT to API').item.json.statusMessage }}",
+              "rightValue": "OK",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "b42f8d07-afd8-4291-ba5b-912ff61e67a0",
+              "leftValue": "={{ $('PUT to API').item.json.statusCode }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1152,
+        240
+      ],
+      "id": "abf320f4-caf5-4225-a2a2-ee0a11e4fc34",
+      "name": "If success"
+    },
+    {
+      "parameters": {
+        "executeOnce": false,
+        "command": "=mv /data/{{ $('Read json files').item.json.fileName }} /error/{{ $('Read json files').item.json.fileName }}"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        464
+      ],
+      "id": "7ef1490f-eadd-4613-82bf-a41383290056",
+      "name": "Move inputfile error"
+    },
+    {
+      "parameters": {
+        "triggerOn": "folder",
+        "path": "/data",
+        "events": [
+          "add"
+        ],
+        "options": {
+          "awaitWriteFinish": true,
+          "usePolling": true
+        }
+      },
+      "type": "n8n-nodes-base.localFileTrigger",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        336
+      ],
+      "id": "d64f1024-78a9-4838-a1c9-1bab9ed5a7ab",
+      "name": "Local File Trigger"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={ \"execution\" : {\n  \"workflowId\": \"{{ $workflow.id }}\",\n  \"ts\": {{ $now }},\n  \"executionId\": \"{{ $execution.id }}\",\n  \"response\" : {{ $json }}\n}\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        768,
+        240
+      ],
+      "id": "8cf6aeef-f6c7-4084-b5f2-4037b93e38a3",
+      "name": "Add metadata"
+    },
+    {
+      "parameters": {
+        "executeOnce": false,
+        "command": "=echo {{JSON.stringify($json.execution)}} >> /audit/log.txt"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        960,
+        240
+      ],
+      "id": "da4d21fa-c34b-4bc3-94fa-1a4dd2a5aeec",
+      "name": "Append to audit log"
+    },
+    {
+      "parameters": {
+        "executeOnce": false,
+        "command": "=mv /data/{{ $('Read json files').item.json.fileName }} /processed/{{ $('Read json files').item.json.fileName }}"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        224
+      ],
+      "id": "28b42593-c5d2-4225-a997-1167f982b347",
+      "name": "Move input file sucess"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read json files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read json files": {
+      "main": [
+        [
+          {
+            "node": "Extract JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PUT to API": {
+      "main": [
+        [
+          {
+            "node": "Add metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract JSON": {
+      "main": [
+        [
+          {
+            "node": "PUT to API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If success": {
+      "main": [
+        [
+          {
+            "node": "Move input file sucess",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Move inputfile error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Local File Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read json files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move inputfile error": {
+      "main": [
+        []
+      ]
+    },
+    "Add metadata": {
+      "main": [
+        [
+          {
+            "node": "Append to audit log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move input file sucess": {
+      "main": [
+        []
+      ]
+    },
+    "Append to audit log": {
+      "main": [
+        [
+          {
+            "node": "If success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Brussels",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "aff6ef4c-8761-49aa-a3db-54f92f81e732",
+  "meta": {
+    "instanceId": "996704d1a402189975958e2f26557368b233bf08d7a60c3c8d419b10b08cf1ab"
+  },
+  "id": "push-to-api",
+  "tags": []
+}
